@@ -1,0 +1,47 @@
+/*
+This is a sample function. Uncomment to execute or make changes to this function.
+salesorderdate = salesorder.get("date").toDate();
+*/
+organizationID = organization.get("organization_id");
+salesorderID = salesorder.get("salesorder_id");
+line_items = salesorder.getJSON("line_items");
+total_srp = 0.00;
+for each  item in line_items
+{
+    qty = item.getJSON("quantity");
+    if(item.containsKey("item_custom_fields") == true)
+    {
+        item_custom_fields = item.getJSON("item_custom_fields");
+        if(item_custom_fields.size() != 0)
+        {
+            for each  custom_field in item_custom_fields
+            {
+                api_name = custom_field.getJSON("api_name");
+                if(api_name == "cf_msrp")
+                {
+                    srp_value = custom_field.getJSON("value");
+                    if(srp_value.isEmpty() != true)
+                    {
+                        srp = srp_value.remove("$");
+                        srp = srp.round(2) * qty.toDecimal();
+                        info srp;
+                        total_srp = total_srp + srp.round(2);
+                    }
+                }
+            }
+        }
+    }
+}
+info total_srp;
+// if(line_items.contains("cf_msrp") == true)
+// {
+cfnew = list();
+cf = Map();
+cf.put("customfield_id",4609918000098822756);
+cf.put("value",total_srp);
+cfnew.add(cf);
+data = Map();
+data.put("custom_fields",cfnew);
+updateSO = zoho.inventory.updateRecord("salesorders",organizationID,salesorderID,data);
+info updateSO;
+// }
